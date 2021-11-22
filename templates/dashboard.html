@@ -1,0 +1,65 @@
+<!-- have forms for edit, create, update users. On every form submit, send the cookie back to the endpoints. -->
+<!-- Also have a log out button. -->
+<!-- Show user detials of response -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<script>function set_loc() {
+        window.location.href = "{{url_for('home') }}"
+    }</script>
+
+<body>
+
+    <header>
+        <form action="{{ url_for('logout') }}"> <input type="submit" value="Logout" name="" id=""> </form>
+    </header>
+
+    <iframe name="target_frame" id="target_frame" style="display: none;"></iframe>
+
+    <div style="text-align: center;">
+        <div style="display: inline-block; margin: 50px;">
+            <h2>Add a new user</h2>
+            <form action="{{ url_for('add_user') }}" method="POST" target="_blank">
+                <p>User Email: <input type="email" name="new_user_email" id=""> </p>
+                <p>User Password: <input type="password" name="new_user_password" id=""> </p>
+                <input type="submit" value="Submit" name="" id="" onClick="set_loc()">
+            </form>
+            <div>{{ response }}</div>
+        </div>
+
+        <div style="display: inline-block; margin: 50px;">
+            <h2>Delete an existing user</h2>
+            <form action="{{ url_for('delete_user') }}" method="POST" target="_blank">
+                <p>User Email: <input type="email" name="deleting_email" id=""> </p>
+                <p>User Password: <input type="password" name="deleting_password" id=""> </p>
+                <input type="submit" value="Submit" name="" id="" onClick="set_loc()">
+            </form>
+            <div>{{ response }}</div>
+        </div>
+
+        <div style="display: inline-block; margin: 50px;">
+            <h2>Change User's Password</h2>
+            <form action="{{ url_for('edit_user') }}" method="POST" target="_blank">
+                <p>User Email: <input type="email" name="edit_user_email" id=""> </p>
+                <p>User Password: <input type="password" name="edit_user_password" id=""> </p>
+                <p>New Password: <input type="password" name="new_password" id=""> </p>
+                <input type="submit" value="Submit" name="" id="" onClick="set_loc()">
+            </form>
+            <div>{{ response }}</div>
+        </div>
+
+
+
+    </div>
+
+
+</body>
+
+</html>
