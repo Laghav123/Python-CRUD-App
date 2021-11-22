@@ -9,6 +9,7 @@ import endpoints
 import json
 import pymongo
 import random
+import os
 
 app = Flask(__name__)
 
@@ -18,6 +19,9 @@ m_client = MongoClient()
 db = m_client["user-database"]
 creds = db.creds
 AUTH_COOKIE = None
+from pathlib import Path
+
+DB = os.path.join(Path(__file__).absolute().parent, "unt.json")
 
 
 class LagError(Exception):
@@ -34,10 +38,6 @@ def return_success(msg):
 
 def return_failure(msg):
     return {"status": "Failure", "message": msg}
-
-
-# TODO_DONE write a POST method to accept email and password
-# TODO_DONE write those email pass to a file (later to be replaced with DB)
 
 
 def gen_cookie() -> str:
@@ -59,7 +59,7 @@ def validate_cookie(cookie):
 
 
 def get_data_from_db():
-    with open("/Users/laghavmohan/Desktop/server/unt.json", "r") as f:
+    with open(DB, "r") as f:
         try:
             data = json.load(f)
         except JSONDecodeError as e:
@@ -68,7 +68,7 @@ def get_data_from_db():
 
 
 def write_data_to_db(data):
-    with open("/Users/laghavmohan/Desktop/server/unt.json", "w") as f:
+    with open(DB, "w") as f:
         json.dump(data, f)
 
 
@@ -79,7 +79,6 @@ def internal_error(error):
 
 def j_add_document(new_item):
     data = get_data_from_db()
-    # TODO send error if user already present.
     if new_item in data:
         raise LagError("Already Registered")
     data.append(new_item)
@@ -100,7 +99,6 @@ def add_user():
         validate_cookie(request.cookies.get("pw"))
     except NotAuth as e:
         return return_failure(str(e))
-    # TODO if cookie not valid, redirect user to home page.
     email = request.form["new_user_email"]
     password = request.form["new_user_password"]
 
@@ -127,8 +125,6 @@ def m_remove_document(to_delete):
         raise LagError("User Not present")
 
 
-# TODO_DONE write deleter to delete email pass pair from that file.
-# TODO_DONE check if email exists, if not, error.
 @app.route(endpoints.DELETE_USER, methods=["POST"])
 def delete_user():
     try:
@@ -145,10 +141,6 @@ def delete_user():
     return return_success("Successfully Deleted")
 
 
-# TODO_DONE write edit method to change email or password in that file said above.
-# TODO_DONE check if email exists already or not. if not, return error
-
-
 def j_update_document(old, new):
     data = get_data_from_db()
     try:
@@ -156,19 +148,16 @@ def j_update_document(old, new):
         data.append(new)
     except ValueError as e:
         raise LagError("Register first")
-        # pass
     write_data_to_db(data)
 
 
 def m_update_document(old, new):
-    # creds.update
     m_remove_document(old)
     m_add_document(new)
 
 
 @app.route(endpoints.EDIT_USER, methods=["POST"])
 def edit_user():
-    # TODO if cookie not valid, redirect user to home page.
     try:
         validate_cookie(request.cookies.get("pw"))
     except NotAuth as e:
@@ -187,18 +176,6 @@ def edit_user():
     return return_success("Edited successfully")
 
 
-# TODO auth today?
-
-
-@app.route("/upper", methods=["POST"])
-def upper():
-    text = request.form["text"]
-    processed_text = text.upper()
-    return processed_text
-
-    # Do you see ths ?
-
-
 @app.route(endpoints.EMPTY)
 @app.route(endpoints.HOME)
 def home():
@@ -214,17 +191,12 @@ def home():
 
 @app.route(endpoints.LOGIN, methods=["GET", "POST"])
 def login_admin():
-    # Check password correctness.
-    # if correct
-    # - set a cookie.
-    # - redirect to dashboard.
     correct_password = "admin123"
     password = request.form.get("password")
     if password == correct_password:
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie("pw", gen_cookie(), max_age=None)
         return resp
-    # if not, redirect back to home.
     else:
         return redirect(url_for("home"))
 
@@ -241,51 +213,6 @@ def dashboard():
     try:
         validate_cookie(request.cookies.get("pw"))
     except NotAuth as e:
-        return return_failure(str(e))
+        return redirect(url_for("home")), 403
 
     return render_template("dashboard.html")
-
-
-@app.route("/about_us")
-def about_us():
-    return "we are here"
-
-
-# #  write a new method that takes GET "text" param. and returns a json object.
-
-
-# @app.route("/jayson", methods=["GET"])
-# def jayson():
-#     input_text: str = request.args.get("text")
-#     import json
-
-#     # with open("/Users/laghavmohan/Desktop/server/unt.json", "w") as f:
-#     #     json.dump(
-#     #         [
-#     #             {"username": "blah", "password": "blahp"},
-#     #             {"username": "foo", "password": "foop"},
-#     #         ],
-#     #         f,
-#     #     )
-#     # with open("/Users/laghavmohan/Desktop/server/unt.json", "r") as f:
-#     #     data = json.load(f)
-#     #     print(data)
-
-#     return jsonify({"response": input_text.upper()})  # this returns json.
-
-
-# @app.route("/add_numbers", methods=["POST"])
-# def add_numbers():
-#     n1 = int(request.form["n1"])
-#     n2 = int(request.form["n2"])
-#     return return_success(str(n1 + n2))
-
-
-# @app.route("/divide_numbers", methods=["POST"])
-# def divide_numbers():
-#     n1 = int(request.form["n1"])
-#     n2 = int(request.form["n2"])
-#     if n2 == 0:
-#         return return_failure("Indefinate value")
-
-#     return return_success(str(float(n1) / float(n2)))
